@@ -6,7 +6,7 @@
 /*   By: dgermano <dgermano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 12:51:12 by dgermano          #+#    #+#             */
-/*   Updated: 2025/10/22 12:44:45 by dgermano         ###   ########.fr       */
+/*   Updated: 2025/10/23 15:50:35 by dgermano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,39 +20,69 @@
 #include <vector>
 #include <stdexcept>
 
+#define DATABASE "../cpp_09/data.csv"
 
-typedef struct t_date
-{
-    int day;
-    int moth;
-    int year;
-    float rate;
-    std::string excpt;
-    bool valid;
-} date;
-
-std::ostream & operator <<(std::ostream & out, const date & dt);
-
+// std::ostream & operator <<(std::ostream & out, const date & dt);
 class BitcoinExchange
 {
-    private:
-        std::vector<date> dts;
-        std::vector<date> dts_db;
-    public:
-        BitcoinExchange(const std::string path);
-        // BitcoinExchange(const BitcoinExchange & copy);
-        // BitcoinExchange & operator = (const BitcoinExchange & obj);
-        ~BitcoinExchange();
+
+public:
+    BitcoinExchange findDate(const std::vector<BitcoinExchange> exdbs);
+    typedef struct s_date
+    {
+        int day;
+        int moth;
+        int year;
+    } date;
+    bool valid;
+    BitcoinExchange(const std::string &line, const char del);
+    date getDate() const;
+    float getRate() const;
+    std::string getExcpt() const;
+    bool operator==(const BitcoinExchange &obj)
+    {
+        const date dt = obj.getDate();
+        return _date.year == dt.year && _date.moth == dt.moth && _date.day == dt.day;
+    }
+
+    bool operator!=(const BitcoinExchange &obj)
+    {
+        return !(*this == obj);
+    }
+
+    bool operator<(const BitcoinExchange &obj)
+    {
+        const date dt = obj.getDate();
+        if (_date.year != dt.year)
+            return _date.year < dt.year;
+        if (_date.moth != dt.moth)
+            return _date.moth < dt.moth;
+        return _date.day < dt.day;
+    }
+
+    bool operator>(const BitcoinExchange &obj)
+    {
+        return *this < obj;
+    }
+    // BitcoinExchange(const BitcoinExchange & copy);
+    // BitcoinExchange & operator = (const BitcoinExchange & obj);
+    ~BitcoinExchange();
+
+private:
+    date _date;
+    float rate;
+    std::string excpt;
+    void validDate(date &obj, const char del);
 };
 
-template < typename ttype >
-std::vector<ttype> split(const char * line, char _delim)
+template <typename ttype>
+std::vector<ttype> split(const char *line, char _delim)
 {
     std::stringstream _ss(line);
     std::vector<ttype> vec;
-    std::string  item;
+    std::string item;
     ttype val;
-    
+
     while (std::getline(_ss, item, _delim))
     {
         std::istringstream type(item);
@@ -62,114 +92,108 @@ std::vector<ttype> split(const char * line, char _delim)
     return vec;
 }
 
-int check_float(const std::string & str)
+static int check_float(const std::string &str)
 {
     int pos[2];
     pos[0] = str.find('.');
     pos[1] = str.find('f');
-    
-    if((pos[0] != 0 && pos[0] != str.size() - 1) && (pos[1] == std::string::npos || pos[1] == str.size() - 1))
+
+    if ((pos[0] != 0 && pos[0] != str.size() - 1) && (pos[1] == std::string::npos || pos[1] == str.size() - 1))
         return (1);
     return (0);
-
 }
 
-void validDate(date & obj,const char del)
+void BitcoinExchange::validDate(date &obj, const char del)
 {
-    if ((obj.day > 31 || obj.day < 0 )|| (obj.moth > 12 || obj.moth < 0) || obj.year < 0)
+    if ((obj.day > 31 || obj.day < 0) || (obj.moth > 12 || obj.moth < 0) || obj.year < 0)
     {
-        obj.excpt =  "Invalid date format";
-        return ;
+        excpt = "Invalid date format";
+        return;
     }
-    if(obj.rate < 0 || obj.rate > 1000)
+    if (rate < 0 || rate > 1000)
     {
-        if(del == '|')
-            obj.excpt = (obj.rate) ? "too large a number." : "not a positive number.";
-        return ;
+        if (del == '|')
+            excpt = (rate > 0) ? "too large a number." : "not a positive number.";
+        return;
     }
 }
 
-date getDate(const std::string  & line, const char del)
+BitcoinExchange BitcoinExchange::findDate(std::vector<BitcoinExchange> exdbs)
 {
-    date _new;
+    BitcoinExchange *min = nullptr;
+    BitcoinExchange *max = nullptr;
+
+    if (excpt.empty() == 0)
+        throw std::runtime_error(excpt);
+
+    for (std::vector<BitcoinExchange>::iterator btx = exdbs.begin(); btx != exdbs.end(); ++btx)
+    {
+        if (*btx == *this)
+            return *btx;
+        if (*btx < *this && (min == nullptr || *btx > *min))
+            min = &(*btx);
+        if (*btx > *this && (max == nullptr || *btx < *max))
+            max = &(*btx);
+    }
+    if (min == nullptr)
+        return *max;
+    if (max == nullptr)
+        return *min;
+    date min_date;
+    date max_date;
+    if (min_date.year == max_date.year)
+        if (min_date.moth == max_date.moth)
+            if (min_date.day == max_date.day)
+                return *min;
+    return ((_date.day - min_date.day) < (max_date.day - _date.day)) ? *min : *max;
+    return ((_date.moth - min_date.moth) < (max_date.moth - _date.moth)) ? *min : *max;
+    return ((_date.year - min_date.year) < (max_date.year - _date.year)) ? *min : *max;
+}
+
+BitcoinExchange::BitcoinExchange(const std::string &line, const char del)
+{
     std::vector<std::string> date_rate;
     std::vector<int> data;
-    
-    date_rate = split<std::string>( line.c_str() , del);
+
+    date_rate = split<std::string>(line.c_str(), del);
     if (date_rate.size() != 2)
-    {
-        _new.excpt = "bad input =>";
-        return (_new);
-    }
+        excpt = "bad input => " + line;
     data = split<int>(date_rate[0].c_str(), '-');
+    _date.day = data[2];
+    _date.moth = data[1];
+    _date.year = data[0];
+    rate = split<float>(date_rate[1].c_str(), '\n')[0];
+    valid = true;
+    validDate(_date, del);
+};
 
-    _new.day = data[2];
-    _new.moth = data[1];
-    _new.year = data[0];
-    _new.rate = split<float>(date_rate[1].c_str(), '\n')[0];
-    _new.valid = true;
-    // _new.excpt = (!_new.excpt.empty()) ? "a" : _new.excpt;
-    // "bad input =>"
-    
-    validDate(_new, del);
-    return (_new);
-}
+BitcoinExchange::date BitcoinExchange::getDate() const { return _date; };
+float BitcoinExchange::getRate() const { return rate; };
+std::string BitcoinExchange::getExcpt() const { return excpt; };
 
-BitcoinExchange::BitcoinExchange(const std::string path)
+BitcoinExchange::~BitcoinExchange() {};
+
+std::ostream &operator<<(std::ostream &out, const BitcoinExchange &btx)
 {
-    std::fstream iFile(path);
-    std::fstream dbFile("../cpp_09/data.csv");
-    std::string line;
-    
-    if(iFile.fail() || dbFile.fail())
-        std::cerr << "Error opening files" << std::endl;
-    while (!iFile.eof())
+    if (!btx.getExcpt().empty() && btx.valid)
     {
-        std::getline(iFile, line);
-        dts.push_back(getDate(line, '|'));
-    }
-    if (std::getline(dbFile, line) , !line.compare("date,exchange_rate"))
-    {
-        while (!dbFile.eof())
+        out << "Error: ";
+        if (btx.getExcpt().compare("bad input =>") == 0)
         {
-            std::getline(dbFile, line);
-            dts_db.push_back(getDate(line, ','));
+            BitcoinExchange tmp = btx;
+            tmp.valid = false;
+            out << btx.getExcpt() << " " << tmp;
         }
+        else
+            out << btx.getExcpt();
+        return out;
     }
-    else
-        std::cout << line << std::endl,
-        std::cout << "database is current corrupted" << std::endl;
-        
-    
-    // for (size_t i = 0; i < dts_db.size(); i++)
-    //     std::cout << dts_db[i] << std::endl;
-    // std::sort(dts_db.begin(), dts_db.end());
-    for (size_t i = 0; i < dts.size(); i++)
-        std::cout << dts[i] << std::endl;
-    
-}
+    BitcoinExchange::date _date = btx.getDate();
+    out << _date.year << ((_date.moth < 10) ? "-0" : "-");
+    out << _date.moth << ((_date.day < 10) ? "-0" : "-");
+    out << _date.day;
+    if (btx.valid)
+        out << " => " << btx.getRate();
 
-BitcoinExchange::~BitcoinExchange(){};
-
-std::ostream & operator <<(std::ostream & out, const date & dt)
-{
-        if (!dt.excpt.empty() && dt.valid)
-        {
-            out << "Error: ";
-            if(dt.excpt.compare("bad input =>") == 0)
-            {
-                date tmp = dt;
-                tmp.valid = false;
-                out << dt.excpt << " " << tmp;
-            }
-            else
-                out << dt.excpt;
-            return out;
-        }
-        out << dt.year << ((dt.moth < 10 ) ? "-0" : "-") ;
-        out << dt.moth << ((dt.day < 10 ) ? "-0" : "-");
-        out << dt.day;
-        if(dt.valid) out << " | " << dt.rate;
-    
     return out;
 }
