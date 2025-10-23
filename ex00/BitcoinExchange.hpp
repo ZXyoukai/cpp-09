@@ -6,12 +6,13 @@
 /*   By: dgermano <dgermano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 12:51:12 by dgermano          #+#    #+#             */
-/*   Updated: 2025/10/16 15:51:19 by dgermano         ###   ########.fr       */
+/*   Updated: 2025/10/22 12:44:45 by dgermano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <fstream>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <map>
@@ -19,24 +20,24 @@
 #include <vector>
 #include <stdexcept>
 
-class Date
+
+typedef struct t_date
 {
-    private:
-        int d;
-        int m;
-        int y;
-        float value;
-    public:
-        Date( const std::string & line);
-        // Date( const Date & copy);
-        // Date & operator = (const Date & obj);
-        ~Date();
-};
+    int day;
+    int moth;
+    int year;
+    float rate;
+    std::string excpt;
+    bool valid;
+} date;
+
+std::ostream & operator <<(std::ostream & out, const date & dt);
 
 class BitcoinExchange
 {
     private:
-        std::vector<Date> dts;
+        std::vector<date> dts;
+        std::vector<date> dts_db;
     public:
         BitcoinExchange(const std::string path);
         // BitcoinExchange(const BitcoinExchange & copy);
@@ -44,65 +45,131 @@ class BitcoinExchange
         ~BitcoinExchange();
 };
 
-Date::Date(const std::string  & line): y(0), d(0), m(0), value(0.0f)
+template < typename ttype >
+std::vector<ttype> split(const char * line, char _delim)
 {
-    try
+    std::stringstream _ss(line);
+    std::vector<ttype> vec;
+    std::string  item;
+    ttype val;
+    
+    while (std::getline(_ss, item, _delim))
     {
-        std::istringstream ss(line);
-        std::string tmp;
-
-        for (size_t i = 0; i < 4; i)
-        {
-            if((ss >> tmp); tmp.compare("-") )
-            i++;
-        }
-        
-        ss >> this->y;
-        ss >> this->m;
-        ss >> this->d;
-        ss >> this->value;
-
-        std::cout << y << m << d << value << std::endl;
-        exit(0);
+        std::istringstream type(item);
+        type >> val;
+        vec.push_back(val);
     }
-    catch(const std::exception& e)
+    return vec;
+}
+
+int check_float(const std::string & str)
+{
+    int pos[2];
+    pos[0] = str.find('.');
+    pos[1] = str.find('f');
+    
+    if((pos[0] != 0 && pos[0] != str.size() - 1) && (pos[1] == std::string::npos || pos[1] == str.size() - 1))
+        return (1);
+    return (0);
+
+}
+
+void validDate(date & obj,const char del)
+{
+    if ((obj.day > 31 || obj.day < 0 )|| (obj.moth > 12 || obj.moth < 0) || obj.year < 0)
     {
-        std::cerr << e.what() << '\n';
+        obj.excpt =  "Invalid date format";
         return ;
     }
-    // if (y > 2025 || y < 0)
-    //     std::cerr << "Error invalid year" << std::endl;
-    // else if (m > 12 || m < 0)
-    //     std::cerr << "Error invalid moth" << std::endl;
-    // else if (d > 31 || d < 0)
-    //     std::cerr << "Error invalid day" << std::endl;
-    // else if (value < 0 || value > 1000)
-    //     std::cerr << "Error invalid value" << std::endl;
+    if(obj.rate < 0 || obj.rate > 1000)
+    {
+        if(del == '|')
+            obj.excpt = (obj.rate) ? "too large a number." : "not a positive number.";
+        return ;
+    }
 }
-Date::~Date(){};
+
+date getDate(const std::string  & line, const char del)
+{
+    date _new;
+    std::vector<std::string> date_rate;
+    std::vector<int> data;
+    
+    date_rate = split<std::string>( line.c_str() , del);
+    if (date_rate.size() != 2)
+    {
+        _new.excpt = "bad input =>";
+        return (_new);
+    }
+    data = split<int>(date_rate[0].c_str(), '-');
+
+    _new.day = data[2];
+    _new.moth = data[1];
+    _new.year = data[0];
+    _new.rate = split<float>(date_rate[1].c_str(), '\n')[0];
+    _new.valid = true;
+    // _new.excpt = (!_new.excpt.empty()) ? "a" : _new.excpt;
+    // "bad input =>"
+    
+    validDate(_new, del);
+    return (_new);
+}
 
 BitcoinExchange::BitcoinExchange(const std::string path)
 {
     std::fstream iFile(path);
-
-    if(iFile.fail())
-        std::cerr << "Error opening file" << std::endl;
+    std::fstream dbFile("../cpp_09/data.csv");
+    std::string line;
+    
+    if(iFile.fail() || dbFile.fail())
+        std::cerr << "Error opening files" << std::endl;
     while (!iFile.eof())
     {
-        std::string line;
         std::getline(iFile, line);
-        try
-        {
-            Date dt(line);
-            dts.push_back(dt);
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-        
+        dts.push_back(getDate(line, '|'));
     }
+    if (std::getline(dbFile, line) , !line.compare("date,exchange_rate"))
+    {
+        while (!dbFile.eof())
+        {
+            std::getline(dbFile, line);
+            dts_db.push_back(getDate(line, ','));
+        }
+    }
+    else
+        std::cout << line << std::endl,
+        std::cout << "database is current corrupted" << std::endl;
+        
+    
+    // for (size_t i = 0; i < dts_db.size(); i++)
+    //     std::cout << dts_db[i] << std::endl;
+    // std::sort(dts_db.begin(), dts_db.end());
+    for (size_t i = 0; i < dts.size(); i++)
+        std::cout << dts[i] << std::endl;
     
 }
 
 BitcoinExchange::~BitcoinExchange(){};
+
+std::ostream & operator <<(std::ostream & out, const date & dt)
+{
+        if (!dt.excpt.empty() && dt.valid)
+        {
+            out << "Error: ";
+            if(dt.excpt.compare("bad input =>") == 0)
+            {
+                date tmp = dt;
+                tmp.valid = false;
+                out << dt.excpt << " " << tmp;
+            }
+            else
+                out << dt.excpt;
+            return out;
+        }
+        out << dt.year << ((dt.moth < 10 ) ? "-0" : "-") ;
+        out << dt.moth << ((dt.day < 10 ) ? "-0" : "-");
+        out << dt.day;
+        if(dt.valid) out << " | " << dt.rate;
+    
+    return out;
+}

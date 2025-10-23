@@ -15,7 +15,7 @@ clean:
 
 fclean : clean 
 
-	${CLEANER} ${NAME}
+	${CLEANER} -rf ${NAME}
 
 re : fclean all
 
