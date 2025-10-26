@@ -19,18 +19,24 @@ static std::vector<BitcoinExchange> ReadExDatabase( void )
     std::vector<BitcoinExchange> exdbs;
     std::string line;
     
-    if(dbFile.fail())
-        std::cerr << "Error opening files" << std::endl;
-    if (std::getline(dbFile, line) , !line.compare("date,exchange_rate"))
+    if (!dbFile.is_open())
     {
-        while (!dbFile.eof())
-        {
-            std::getline(dbFile, line);
-            exdbs.push_back(BitcoinExchange(line, ','));
-        }   
+        std::cerr << "Error opening database file: " << DATABASE << std::endl;
+        return exdbs;
     }
-    else
-        std::cerr << "database is current corrupted" << std::endl;
+
+    if (!std::getline(dbFile, line) || line != "date,exchange_rate")
+    {
+        std::cerr << "database is corrupted or has unexpected header" << std::endl;
+        return exdbs;
+    }
+
+    while (std::getline(dbFile, line))
+    {
+        if (line.empty())
+            continue;
+        exdbs.push_back(BitcoinExchange(line, ','));
+    }
     return exdbs;
 }
 
@@ -38,20 +44,26 @@ static std::vector<BitcoinExchange> ReadExDatabase( const char * path )
 {
     std::fstream dbFile(path);
     std::vector<BitcoinExchange> exdbs;
-    std::string line = "";
+    std::string line;
     
-    if(dbFile.fail())
-        std::cerr << "Error opening files" << std::endl;
-    if (std::getline(dbFile, line) , !line.compare("date | value"))
+    if (!dbFile.is_open())
     {
-        while (!dbFile.eof())
-        {
-            std::getline(dbFile, line);
-            exdbs.push_back(BitcoinExchange(line, '|'));
-        }   
+        std::cerr << "Error: could not open file." << std::endl;
+        return exdbs;
     }
-    else
-        std::cerr << "database is current corrupted" << std::endl;
+
+    if (!std::getline(dbFile, line) || line != "date | value")
+    {
+        std::cerr << "database is corrupted or has unexpected header" << std::endl;
+        return exdbs;
+    }
+
+    while (std::getline(dbFile, line))
+    {
+        if (line.empty())
+            continue;
+        exdbs.push_back(BitcoinExchange(line, '|'));
+    }
     return exdbs;
 }
 
@@ -67,7 +79,8 @@ static void Exchange(const char * path)
         {
             try
             {
-                rate = (*btx).findDate(ExDbs).getRate() * (*btx).getRate();
+                BitcoinExchange found = (*btx).findDate(ExDbs);
+                rate = found.getRate() * (*btx).getRate();
                 std::cout << *btx << " = " << rate << std::endl;
             }
             catch(const std::exception& e)
@@ -78,7 +91,7 @@ static void Exchange(const char * path)
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Wrong: " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << '\n';
     }
 }
 
@@ -86,7 +99,7 @@ int main(int ac, char **av)
 {
     if (ac != 2)
     {
-        std::cerr << "Error: file not found." << std::endl;
+        std::cerr << "Error: could not open file." << std::endl;
         return 1;
     }
     

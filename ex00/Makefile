@@ -2,14 +2,16 @@ NAME = btc
 CXX = c++
 SRCS = BitcoinExchange.cpp main.cpp
 OBJS = ${SRCS:.cpp=.o}
+INCLUDES = BitcoinExchange.hpp
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CLEANER = rm
 
 all: ${NAME}
 
 ${NAME} : ${OBJS}
-	${CXX} ${OBJS} -o ${NAME}
-%.o:%.cpp
-	${CXX} -c $< -o $@
+	${CXX} ${CXXFLAGS} ${OBJS} -o ${NAME}
+%.o:%.cpp ${INCLUDES}
+	${CXX} ${CXXFLAGS} -c $< -o $@
 clean:
 	${CLEANER} -rf ${OBJS}
 
