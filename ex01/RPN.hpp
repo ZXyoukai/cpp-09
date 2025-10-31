@@ -55,9 +55,9 @@ std::vector<ttype> split(const char *line, char _delim)
 }
 
 int _sum(int a,int b){ return a + b; };
-int _sub(int a,int b){ return (a > b) ? (a - b) : (b - a); };
+int _sub(int a,int b){ return (b - a); };
 int _mul(int a,int b){ return a * b; };
-int _div(int a,int b){ return a / b; };
+int _div(int a,int b){ return (a / b); };
 
 void calculate(std::vector<RPN::notation> & ns)
 {
@@ -75,7 +75,9 @@ void calculate(std::vector<RPN::notation> & ns)
     {
         tmp = *n;
         size = tmp._nbs.size();
-        // std::cout << size << std::endl;
+        if(size == 0)
+            return;
+
         if (size > 2)
         {
             (*(n + 1))._nbs.push_back(oper[tmp.expr](tmp._nbs[size - 2], tmp._nbs[size - 1]));
@@ -87,21 +89,11 @@ void calculate(std::vector<RPN::notation> & ns)
                 while (i < tmp._nbs.size())
                     (*(n + 1))._nbs.push_back(tmp._nbs[i++]);
             }
-            /*
-                $> ./RPN "8 9 * 9 - 9 - 9 - 4 - 1 +"
-                42
-                $> ./RPN "7 7 * 7 -"
-                42
-                $> ./RPN "1 2 * 2 / 2 * 2 4 - +"
-                0
-                $> ./RPN "(1 + 1)"
-                Error
-                $>
-            */
-            // ns.erase(n);
         }
-        else
+        else if (size == 2)
         {
+            if(size == 0)
+                std::cout << "error" << std::endl;
             tmp._nbs[size - 2] = oper[tmp.expr](tmp._nbs[size - 2], tmp._nbs[size - 1]);
             // (*(n + 1))._nbs.push_back(oper[tmp.expr](tmp._nbs[size - 1], tmp._nbs[size - 2]));
             if(n + 1 != ns.end())
@@ -109,13 +101,13 @@ void calculate(std::vector<RPN::notation> & ns)
                 (*(n + 1))._nbs.push_back(tmp._nbs[size - 2]);
                 tmp._nbs.pop_back();
                 tmp._nbs.pop_back();
-
             }
-            tmp._nbs.pop_back();
+            else
+                tmp._nbs.pop_back();
         }
     }
     for (std::vector<RPN::notation>::iterator n = ns.begin(); n != ns.end(); n++)
-       if((*n)._nbs.size() == 1) std::cout << *n << std::endl;
+        std::cout << *n << std::endl;
 }
 RPN::RPN(const std::string & input )
 {
