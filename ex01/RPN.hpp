@@ -9,12 +9,13 @@
 /*   Updated: 2025-10-26 07:13:56 by dgermano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #ifndef RPN_HPP
 #define RPN_HPP
 #include <iostream>
 #include <sstream>
 #include <ostream>
-#include <vector>
+#include <deque>
 #include <map>
 #define OPERATORS "+-/*"
 
@@ -24,23 +25,23 @@ class RPN
     public:
     typedef struct t_notation
     {
-        std::vector<int> _nbs;
+        std::deque<int> _nbs;
         char expr;
     } notation;
     
     RPN(const std::string & input);
     ~RPN();
     private:
-        // void calculate(std::vector<notation> & ns);
+        // void calculate(std::deque<notation> & ns);
         // notation getRPN(const std::string & line);
 };
 std::ostream & operator<<(std::ostream & out, const RPN::notation & n);
 
 template <typename ttype>
-std::vector<ttype> split(const char *line, char _delim)
+std::deque<ttype> split(const char *line, char _delim)
 {
     std::stringstream _ss(line);
-    std::vector<ttype> vec;
+    std::deque<ttype> vec;
     std::string item;
     ttype val;
     
@@ -59,7 +60,7 @@ int _sub(int a,int b){ return (b - a); };
 int _mul(int a,int b){ return a * b; };
 int _div(int a,int b){ return (a / b); };
 
-void calculate(std::vector<RPN::notation> & ns)
+void calculate(std::deque<RPN::notation> & ns)
 {
     std::map<char, int (*)(int, int)> oper;
     std::size_t size;
@@ -71,12 +72,15 @@ void calculate(std::vector<RPN::notation> & ns)
     oper['*'] = _mul;
     oper['/'] = _div;
 
-    for (std::vector<RPN::notation>::iterator n = ns.begin(); n != ns.end(); n++)
+    for (std::deque<RPN::notation>::iterator n = ns.begin(); n != ns.end(); n++)
     {
         tmp = *n;
         size = tmp._nbs.size();
-        if(size == 0)
+        if(size < 2)
+        {
+            std::cout << "Error" << std::endl;
             return;
+        }
 
         if (size > 2)
         {
@@ -87,13 +91,16 @@ void calculate(std::vector<RPN::notation> & ns)
             {
                 i = 0;
                 while (i < tmp._nbs.size())
+                {
                     (*(n + 1))._nbs.push_back(tmp._nbs[i++]);
+                    (*n)._nbs.pop_back();
+                }
             }
         }
         else if (size == 2)
         {
-            if(size == 0)
-                std::cout << "error" << std::endl;
+            // if(size == 0)
+            //     std::cout << "error" << std::endl;
             tmp._nbs[size - 2] = oper[tmp.expr](tmp._nbs[size - 2], tmp._nbs[size - 1]);
             // (*(n + 1))._nbs.push_back(oper[tmp.expr](tmp._nbs[size - 1], tmp._nbs[size - 2]));
             if(n + 1 != ns.end())
@@ -106,14 +113,30 @@ void calculate(std::vector<RPN::notation> & ns)
                 tmp._nbs.pop_back();
         }
     }
-    for (std::vector<RPN::notation>::iterator n = ns.begin(); n != ns.end(); n++)
-        std::cout << *n << std::endl;
+    for (std::deque<RPN::notation>::iterator n = ns.begin(); n != ns.end(); n++)
+       if((*n)._nbs.size() == 1) std::cout << *n << std::endl;
 }
+
+static bool checkInvalid(std::string const input)
+{
+    const std::string valid =  "0123456789+-*/ 	";
+    for (size_t i = 0; i < input.size(); i++)
+            if(valid.find_first_of(input[i]) == std::string::npos)
+            {
+                std::cout << "Error" << std::endl;
+                return true;
+            }
+            // if (input[i])
+    return false;
+}
+
 RPN::RPN(const std::string & input )
 {
     std::string tmp = input;
-    std::vector<notation> nts;
+    std::deque<notation> nts;
     std::size_t pos;
+    
+    if (checkInvalid(input)) return ;
     while ((pos = tmp.find_first_of(OPERATORS)) != std::string::npos)
     {
         notation n;
@@ -122,6 +145,7 @@ RPN::RPN(const std::string & input )
         nts.push_back(n);
         tmp = tmp.substr(pos + 1);
     }
+    if(tmp.empty() == 0) std::cout << "Error" << std::endl;
     // std::cout << "notation length = " << nts.size() << std::endl; 
     // for (size_t i = 0; i < nts.size(); i++)
     //     std::cout << nts[i] << std::endl;
@@ -133,7 +157,7 @@ RPN::~RPN(){}
 
 std::ostream & operator<<(std::ostream & out, const RPN::notation & n)
 {
-    for (std::vector<int>::const_iterator it = n._nbs.begin(); it != n._nbs.end(); it++)
+    for (std::deque<int>::const_iterator it = n._nbs.begin(); it != n._nbs.end(); it++)
         out << *it << ((it  + 1 == n._nbs.end()) ? "" : " ");    
     out << ((n._nbs.size() && n._nbs.size() != 1) ? " " : "");
     if(n._nbs.size() != 1)
