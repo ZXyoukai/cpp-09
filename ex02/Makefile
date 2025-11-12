@@ -1,4 +1,4 @@
-NAME = RPN
+NAME = PmergeMe
 CXX = c++
 SRCS =  main.cpp
 OBJS = ${SRCS:.cpp=.o}

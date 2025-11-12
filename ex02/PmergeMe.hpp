@@ -48,6 +48,7 @@ PmergeMe::PmergeMe(const std::string &input)
     const std::stack<int> stk = split<int>(input.c_str(), ' ');
     std::stack<int> tmp = stk;
 
+    std::cout << "Before: ";
     while (!tmp.empty())
         std::cout << tmp.top() << " ", tmp.pop();
     std::cout << std::endl;
