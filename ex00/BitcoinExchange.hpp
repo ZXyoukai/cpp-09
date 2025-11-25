@@ -16,8 +16,7 @@
 #include <sstream>
 #include <string>
 #include <map>
-#include <algorithm>
-#include <vector>
+#include <list>
 #include <stdexcept>
 
 #define DATABASE "./data.csv"

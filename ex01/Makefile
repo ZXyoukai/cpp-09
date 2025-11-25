@@ -3,7 +3,7 @@ CXX = c++
 SRCS =  main.cpp RPN.cpp
 OBJS = ${SRCS:.cpp=.o}
 INCLUDES = RPN.hpp
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
 CLEANER = rm
 
 all: ${NAME}

@@ -42,10 +42,10 @@ static std::map<std::string, float> ReadExDatabase( void )
     return exdbs;
 }
 
-static std::vector<BitcoinExchange> ReadExDatabase( const char * path )
+static std::list<BitcoinExchange> ReadExDatabase( const char * path )
 {
     std::fstream dbFile(path);
-    std::vector<BitcoinExchange> exdbs;
+    std::list<BitcoinExchange> exdbs;
     std::string line;
     
     if (!dbFile.is_open())
@@ -74,10 +74,10 @@ static void Exchange(const char * path)
     try
     {
         const std::map<std::string, float> ExDbs = ReadExDatabase();
-        std::vector<BitcoinExchange> IDbs = ReadExDatabase(path);
+        std::list<BitcoinExchange> IDbs = ReadExDatabase(path);
         float rate;
         
-        for (std::vector<BitcoinExchange>::iterator btx = IDbs.begin(); btx < IDbs.end(); btx++)
+        for (std::list<BitcoinExchange>::iterator btx = IDbs.begin(); btx != IDbs.end(); btx++)
         {
             try
             {
