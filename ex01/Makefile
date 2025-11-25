@@ -1,6 +1,6 @@
 NAME = RPN
 CXX = c++
-SRCS =  main.cpp
+SRCS =  main.cpp RPN.cpp
 OBJS = ${SRCS:.cpp=.o}
 INCLUDES = RPN.hpp
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98

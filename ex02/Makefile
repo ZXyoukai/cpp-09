@@ -1,8 +1,8 @@
 NAME = PmergeMe
 CXX = c++
-SRCS =  main.cpp
+SRCS = main.cpp PmergeMe.cpp
 OBJS = ${SRCS:.cpp=.o}
-INCLUDES = RPN.hpp
+INCLUDES = PmergeMe.hpp
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CLEANER = rm
 

@@ -15,12 +15,30 @@
 
 int main(int ac, char **av)
 {
-    if (ac != 2)
+    if (ac < 2)
     {
         std::cerr << "Error: invalid arguments." << std::endl;
         return 1;
     }
     
-    return PmergeMe(av[1]), 0;
+    try
+    {
+        std::string input;
+        for (int i = 1; i < ac; i++)
+        {
+            if (i > 1)
+                input += " ";
+            input += av[i];
+        }
+        
+        PmergeMe sorter;
+        sorter.sort(input);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+    
     return 0;
 };

@@ -13,10 +13,10 @@
 #include <iostream>
 #include "BitcoinExchange.hpp"
 
-static std::vector<BitcoinExchange> ReadExDatabase( void )
+static std::map<std::string, float> ReadExDatabase( void )
 {
     std::fstream dbFile(DATABASE);
-    std::vector<BitcoinExchange> exdbs;
+    std::map<std::string, float> exdbs;
     std::string line;
     
     if (!dbFile.is_open())
@@ -35,7 +35,9 @@ static std::vector<BitcoinExchange> ReadExDatabase( void )
     {
         if (line.empty())
             continue;
-        exdbs.push_back(BitcoinExchange(line, ','));
+        BitcoinExchange btc(line, ',');
+        if (btc.getExcpt().empty())
+            exdbs[btc.dateToString()] = btc.getRate();
     }
     return exdbs;
 }
@@ -71,7 +73,7 @@ static void Exchange(const char * path)
 {
     try
     {
-        const std::vector<BitcoinExchange> ExDbs = ReadExDatabase();
+        const std::map<std::string, float> ExDbs = ReadExDatabase();
         std::vector<BitcoinExchange> IDbs = ReadExDatabase(path);
         float rate;
         

@@ -44,21 +44,48 @@ void BitcoinExchange::validDate(date &obj, const char del)
     }
 }
 
-BitcoinExchange BitcoinExchange::findDate(std::vector<BitcoinExchange> exdbs)
+std::string BitcoinExchange::dateToString() const
 {
-    BitcoinExchange *min = NULL;
+    std::stringstream ss;
+    ss << _date.year << "-";
+    if (_date.moth < 10) ss << "0";
+    ss << _date.moth << "-";
+    if (_date.day < 10) ss << "0";
+    ss << _date.day;
+    return ss.str();
+}
 
+BitcoinExchange BitcoinExchange::findDate(const std::map<std::string, float> &exdbs)
+{
     if (excpt.empty() == 0)
         throw std::runtime_error(excpt);
 
-    for (std::vector<BitcoinExchange>::iterator btx = exdbs.begin(); btx != exdbs.end(); btx++)
+    std::string searchDate = dateToString();
+    
+    // Procura a data exata ou a mais próxima anterior
+    std::map<std::string, float>::const_iterator it = exdbs.lower_bound(searchDate);
+    
+    // Se encontrou a data exata
+    if (it != exdbs.end() && it->first == searchDate)
     {
-        if (*btx == *this)
-            return *btx;
-        if (*btx < *this && (min == NULL || *btx > *min))
-            min = &(*btx);
+        BitcoinExchange result(*this);
+        result.rate = it->second;
+        return result;
     }
-    return *min;
+    
+    // Se não encontrou e está no início, usa a primeira data
+    if (it == exdbs.begin())
+    {
+        BitcoinExchange result(*this);
+        result.rate = it->second;
+        return result;
+    }
+    
+    // Caso contrário, usa a data anterior
+    --it;
+    BitcoinExchange result(*this);
+    result.rate = it->second;
+    return result;
 }
 
 BitcoinExchange::BitcoinExchange(const std::string &line, const char del)
@@ -104,18 +131,18 @@ BitcoinExchange & BitcoinExchange::operator = (const BitcoinExchange & obj)
     return *this;
 }
 
-bool BitcoinExchange::operator==(const BitcoinExchange &obj)
+bool BitcoinExchange::operator==(const BitcoinExchange &obj) const
 {
     const date dt = obj.getDate();
     return _date.year == dt.year && _date.moth == dt.moth && _date.day == dt.day;
 }
 
-bool BitcoinExchange::operator!=(const BitcoinExchange &obj)
+bool BitcoinExchange::operator!=(const BitcoinExchange &obj) const
 {
     return !(*this == obj);
 }
 
-bool BitcoinExchange::operator<(const BitcoinExchange &obj)
+bool BitcoinExchange::operator<(const BitcoinExchange &obj) const
 {
     const date dt = obj.getDate();
     if (_date.year != dt.year)
@@ -125,9 +152,9 @@ bool BitcoinExchange::operator<(const BitcoinExchange &obj)
     return _date.day < dt.day;
 }
 
-bool BitcoinExchange::operator>(const BitcoinExchange &obj)
+bool BitcoinExchange::operator>(const BitcoinExchange &obj) const
 {
-    return const_cast <BitcoinExchange &>(obj) < *this;
+    return obj < *this;
 }
 
 std::ostream &operator<<(std::ostream &out, const BitcoinExchange &btx)

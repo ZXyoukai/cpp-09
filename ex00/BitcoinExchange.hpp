@@ -38,14 +38,15 @@ public:
     std::string getExcpt() const;
     bool valid;
     float getRate() const;
-    bool operator==(const BitcoinExchange &obj);
-    bool operator!=(const BitcoinExchange &obj);
-    bool operator<(const BitcoinExchange &obj);
-    bool operator>(const BitcoinExchange &obj);
+    bool operator==(const BitcoinExchange &obj) const;
+    bool operator!=(const BitcoinExchange &obj) const;
+    bool operator<(const BitcoinExchange &obj) const;
+    bool operator>(const BitcoinExchange &obj) const;
     BitcoinExchange(const BitcoinExchange & copy);
     BitcoinExchange(const std::string &line, const char del);
     BitcoinExchange & operator = (const BitcoinExchange & obj);
-    BitcoinExchange findDate(const std::vector<BitcoinExchange> exdbs);
+    BitcoinExchange findDate(const std::map<std::string, float> &exdbs);
+    std::string dateToString() const;
     ~BitcoinExchange();
 
 private:
