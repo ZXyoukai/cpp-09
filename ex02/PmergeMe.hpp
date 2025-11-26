@@ -28,28 +28,18 @@ class PmergeMe
 private:
     std::vector<int> _vectorData;
     std::deque<int> _dequeData;
-
-    // Ford-Johnson algorithm para vector
-    void mergeInsertSortVector(std::vector<int> &arr);
-    void insertionSortVector(std::vector<int> &arr, size_t left, size_t right);
-    void mergeVector(std::vector<int> &arr, size_t left, size_t mid, size_t right);
-
-    // Ford-Johnson algorithm para deque
-    void mergeInsertSortDeque(std::deque<int> &arr);
-    void insertionSortDeque(std::deque<int> &arr, size_t left, size_t right);
-    void mergeDeque(std::deque<int> &arr, size_t left, size_t mid, size_t right);
-
-    // Helper functions
+    std::vector<size_t> generateJacobsthal(size_t n);
     void parseInput(const std::string &input);
-    template<typename T>
+    template <typename T>
     void printContainer(const T &container, const std::string &label);
+    template <typename T>
+    void fordJohnsonSort(T &container);
 
 public:
     PmergeMe();
     PmergeMe(const PmergeMe &copy);
     PmergeMe &operator=(const PmergeMe &obj);
     ~PmergeMe();
-
     void sort(const std::string &input);
 };
 
