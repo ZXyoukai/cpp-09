@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "iomanip": "cpp",
         "cctype": "cpp",
         "clocale": "cpp",
         "cmath": "cpp",
@@ -7,6 +8,7 @@
         "cstddef": "cpp",
         "cstdio": "cpp",
         "cstdlib": "cpp",
+        "ctime": "cpp",
         "cwchar": "cpp",
         "cwctype": "cpp",
         "array": "cpp",
@@ -16,6 +18,7 @@
         "concepts": "cpp",
         "cstdint": "cpp",
         "deque": "cpp",
+        "list": "cpp",
         "map": "cpp",
         "unordered_map": "cpp",
         "vector": "cpp",
@@ -47,9 +50,6 @@
         "sstream": "cpp",
         "stdexcept": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp",
-        "list": "cpp",
-        "pmergeme.hpp": "c",
-        "stack": "cpp"
+        "typeinfo": "cpp"
     }
 }
