@@ -31,7 +31,7 @@ PmergeMe &PmergeMe::operator=(const PmergeMe &obj)
 std::vector<size_t> PmergeMe::generateJacobsthal(size_t n)
 {
     std::vector<size_t> seq;
-    size_t j0 = 0, j1 = 1;
+    size_t j0 = 1, j1 = 1;
 
     while (j1 < n)
     {
@@ -87,12 +87,12 @@ void PmergeMe::printContainer(const T &container, const std::string &label)
 }
 
 template <typename T>
-void PmergeMe::fordJohnsonSort(T &container)
+T PmergeMe::fordJohnsonSort(T &container)
 {
+    T outContainer;
     if (container.size() <= 1)
-        return;
+        return container;
 
-    // 1. Criar pares
     std::vector<typename T::value_type> small;
     std::vector<typename T::value_type> large;
 
@@ -111,44 +111,46 @@ void PmergeMe::fordJohnsonSort(T &container)
         }
     }
 
-    // Se sobrar um elemento (n ímpar)
     typename T::value_type leftover;
     bool has_leftover = false;
+    std::cout << "i: " << i << " size: " << container.size() << std::endl;
     if (i < container.size())
     {
         leftover = container[i];
         has_leftover = true;
     }
 
-    // 2. Ordenar os "large" recursivamente (main chain)
     T mainChain(large.begin(), large.end());
     fordJohnsonSort(mainChain);
-
     printContainer(mainChain, "Main chain: ");
 
-    // 3. Inserir os "small" usando a sequência de Jacobsthal
+
     std::vector<size_t> jacIdx = generateJacobsthal(small.size());
 
-    for (size_t j = 0; j < jacIdx.size(); j++)
+    for (size_t j = 1; j < jacIdx.size(); j++)
     {
         size_t idx = jacIdx[j];
         if (idx >= small.size())
             break;
 
-        // Inserção binária (binary insertion)
         typename T::iterator pos = std::lower_bound(mainChain.begin(), mainChain.end(), small[idx]);
         mainChain.insert(pos, small[idx]);
     }
 
-    // Inserir leftover se houver
+    for (size_t k = 0; k < small.size(); k++)
+    {
+        typename T::iterator pos = std::lower_bound(mainChain.begin(), mainChain.end(), small[k]);
+        mainChain.insert(pos, small[k]);
+    }
+
     if (has_leftover)
     {
         typename T::iterator pos = std::lower_bound(mainChain.begin(), mainChain.end(), leftover);
         mainChain.insert(pos, leftover);
     }
 
-    // Voltar para o container original
-    std::copy(mainChain.begin(), mainChain.end(), container.begin());
+    outContainer = mainChain;
+    return outContainer;
 }
 
 void PmergeMe::sort(const std::string &input)
@@ -161,12 +163,12 @@ void PmergeMe::sort(const std::string &input)
     printContainer(_vectorData, "Before: ");
 
     start = clock();
-    fordJohnsonSort(_vectorData);
+    _vectorData = fordJohnsonSort(_vectorData);
     end = clock();
     vectorTime = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
 
     start = clock();
-    fordJohnsonSort(_dequeData);
+    _dequeData = fordJohnsonSort(_dequeData);
     end = clock();
     dequeTime = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
 

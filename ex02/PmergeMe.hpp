@@ -33,7 +33,7 @@ private:
     template <typename T>
     void printContainer(const T &container, const std::string &label);
     template <typename T>
-    void fordJohnsonSort(T &container);
+    T fordJohnsonSort(T &container);
 
 public:
     PmergeMe();
